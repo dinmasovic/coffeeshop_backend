@@ -32,7 +32,7 @@ public class DrinksController {
     @GetMapping
     public ResponseEntity<List<DisplayDrinkDto>> getDrinks(){
         try {
-            List<DisplayDrinkDto> displayDrinkDtos=drinksService.getDrinks().stream().map(s->new DisplayDrinkDto(s.getName(),s.getPrice())).collect(Collectors.toCollection(ArrayList::new));
+            List<DisplayDrinkDto> displayDrinkDtos=drinksService.getDrinks().stream().map(s->new DisplayDrinkDto(s.getName(),s.getPrice(),s.getId())).collect(Collectors.toCollection(ArrayList::new));
             return ResponseEntity.ok(displayDrinkDtos);
         }catch (NoCoffeeShopAssignedException e){
             System.out.println(e.getMessage());
@@ -42,7 +42,7 @@ public class DrinksController {
     @GetMapping("/{id}")
     public ResponseEntity<DisplayDrinkDto> getDrinkById(@PathVariable long id){
         try {
-            DisplayDrinkDto dto = new DisplayDrinkDto(drinksService.getDrinkById(id).getName(),drinksService.getDrinkById(id).getPrice());
+            DisplayDrinkDto dto = new DisplayDrinkDto(drinksService.getDrinkById(id).getName(),drinksService.getDrinkById(id).getPrice(), id);
             return ResponseEntity.ok(dto);
         }catch (NoDrinkFoundException ex){
             return ResponseEntity.notFound().build();
@@ -53,13 +53,13 @@ public class DrinksController {
         try {
             if (drinkDto.type().equals(DrinkType.NON_ALCOHOLIC.name())) {
                 Drink drink = drinksService.addDrink(new NonAlcoholic(drinkDto.name(), drinkDto.price()));
-                return ResponseEntity.ok(new DisplayDrinkDto(drink.getName(),drink.getPrice()));
+                return ResponseEntity.ok(new DisplayDrinkDto(drink.getName(),drink.getPrice(),drink.getId()));
             } else if (drinkDto.type().equals(DrinkType.ALCOHOLIC.name())) {
                 Drink drink = drinksService.addDrink(new Alcoholic(drinkDto.name(), drinkDto.price()));
-                return ResponseEntity.ok(new DisplayDrinkDto(drink.getName(),drink.getPrice()));
+                return ResponseEntity.ok(new DisplayDrinkDto(drink.getName(),drink.getPrice(),drink.getId()));
             } else {
                 Drink drink = drinksService.addDrink(new Coffee(drinkDto.name(), drinkDto.price()));
-                return ResponseEntity.ok(new DisplayDrinkDto(drink.getName(),drink.getPrice()));
+                return ResponseEntity.ok(new DisplayDrinkDto(drink.getName(),drink.getPrice(),drink.getId()));
             }
         }catch (NoCoffeeShopAssignedException e){
             System.out.println(e.getMessage());
@@ -69,7 +69,7 @@ public class DrinksController {
     @PutMapping("/updateDrink/{id}")
     public ResponseEntity<DisplayDrinkDto> updateDrink(@PathVariable Long id,@RequestParam String name,@RequestParam Double price){
         Drink drink = drinksService.updateDrink(id,name,price);
-        DisplayDrinkDto dto = new DisplayDrinkDto(drink.getName(),drink.getPrice());
+        DisplayDrinkDto dto = new DisplayDrinkDto(drink.getName(),drink.getPrice(),id);
         return ResponseEntity.ok(dto);
     }
 

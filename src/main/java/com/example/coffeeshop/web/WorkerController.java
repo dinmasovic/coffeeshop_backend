@@ -24,7 +24,7 @@ public class WorkerController {
         List<DisplayWorkerDto> displayWorkerDtos= workerService.getAllWorkers().stream().map(s->new DisplayWorkerDto(s.getName())).collect(Collectors.toCollection(ArrayList::new));
         return ResponseEntity.ok(displayWorkerDtos);
     }
-    @PostMapping("/add")
+    @PostMapping("/register")
     public ResponseEntity<DisplayWorkerDto> addWorker(@RequestBody CreateWorkerDto createWorkerDto) {
         Worker worker = new Worker(createWorkerDto.name(), createWorkerDto.password(), (Role)createWorkerDto.role());
         workerService.registerWorker(worker);

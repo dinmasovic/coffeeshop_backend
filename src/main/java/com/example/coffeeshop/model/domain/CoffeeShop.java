@@ -17,7 +17,7 @@ public class CoffeeShop implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+    @Column(unique = true)
     private String name;
     private String password;
 
@@ -44,5 +44,12 @@ public class CoffeeShop implements UserDetails {
     @Override
     public String getUsername() {
         return name;
+    }
+
+    @Override
+    public String toString() {
+        return "CoffeeShop{" +
+                "name='" + name + '\'' +
+                '}';
     }
 }

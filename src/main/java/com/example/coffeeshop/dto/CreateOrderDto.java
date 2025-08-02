@@ -1,4 +1,7 @@
 package com.example.coffeeshop.dto;
 
-public record CreateOrderDto() {
+
+import java.util.List;
+
+public record CreateOrderDto(List<Long> drinksId, Long tableNumber) {
 }

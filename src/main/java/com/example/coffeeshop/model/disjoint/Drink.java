@@ -23,5 +23,10 @@ public abstract class Drink {
         this.price = price;
     }
 
-
+    @Override
+    public String toString() {
+        return "Drink{" +
+                "name='" + name + '\'' +
+                '}';
+    }
 }

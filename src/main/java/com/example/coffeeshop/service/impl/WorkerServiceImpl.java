@@ -41,6 +41,10 @@ public class WorkerServiceImpl implements WorkerService, UserDetailsService {
         worker.setPassword(passwordEncoder.encode(worker.getPassword()));
         return workerRepository.save(worker);
     }
+    @Override
+    public Worker saveWorker(Worker worker) {
+        return workerRepository.save(worker);
+    }
 
     @Override
     @Transactional

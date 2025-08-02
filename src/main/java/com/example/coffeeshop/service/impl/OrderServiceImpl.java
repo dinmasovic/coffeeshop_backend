@@ -34,33 +34,22 @@ public class OrderServiceImpl implements OrderService {
     }
     public void authorizeForAddOrDeleteDrink(Order order,Long drinkId){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getPrincipal() instanceof Worker){
-            Worker worker = (Worker) authentication.getPrincipal();
-            if(worker.getCoffeeShop()==null){
-                throw new NoCoffeeShopAssignedException("The worker has no coffee shop assigned to him");
-            }
-            if(worker.getOrders().stream().noneMatch(s->s.getTableNumber().equals(order.getTableNumber()))){
-                List<Order> orders = worker.getCoffeeShop().getWorkers().stream().flatMap(s->s.getOrders().stream()).collect(Collectors.toCollection(ArrayList::new));
-                if(orders.stream().noneMatch(o->o.getTableNumber().equals(order.getTableNumber()))){
-                    throw new RuntimeException("The order is not part of your coffee shop");
-                }
-            }
-            List<Long> drinks = worker.getCoffeeShop().getDrinks().stream().map(Drink::getId).collect(Collectors.toCollection(ArrayList::new));
-            if(!drinks.contains(drinkId)){
-                throw new RuntimeException("The drink is not part of your coffee shop");
-            }
-        }else{
-            CoffeeShop coffeeShop=(CoffeeShop) authentication.getPrincipal();
-            coffeeShop=coffeeShopService.getCoffeeShop(coffeeShop.getId()).get();
-            List<Order> orders = coffeeShop.getWorkers().stream().flatMap(s->s.getOrders().stream()).collect(Collectors.toCollection(ArrayList::new));
-            if(!orders.contains(order)){
+        Worker worker = (Worker) authentication.getPrincipal();
+        worker=workerService.getWorker(worker.getId());
+        if(worker.getCoffeeShop()==null){
+            throw new NoCoffeeShopAssignedException("The worker has no coffee shop assigned to him");
+        }
+        if(worker.getOrders().stream().noneMatch(s->s.getId().equals(order.getId()))){
+            List<Order> orders = worker.getCoffeeShop().getWorkers().stream().flatMap(s->s.getOrders().stream()).collect(Collectors.toCollection(ArrayList::new));
+            if(orders.stream().noneMatch(o->o.getId().equals(order.getId()))){
                 throw new RuntimeException("The order is not part of your coffee shop");
             }
-            List<Long> drinks = coffeeShop.getDrinks().stream().map(Drink::getId).collect(Collectors.toCollection(ArrayList::new));
-            if(!drinks.contains(drinkId)){
-                throw new RuntimeException("The drink is not part of your coffee shop");
-            }
         }
+        List<Long> drinks = worker.getCoffeeShop().getDrinks().stream().map(Drink::getId).collect(Collectors.toCollection(ArrayList::new));
+        if(!drinks.contains(drinkId)){
+            throw new RuntimeException("The drink is not part of your coffee shop");
+        }
+
     }
 
     @Override
@@ -84,29 +73,28 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Order addOrder(Long workerId, Order order) {
-        Worker worker = workerService.getWorker(workerId);
+    public Order addOrder(Order order) {
+        Worker worker = (Worker) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        worker = workerService.getWorker(worker.getId());
         if(worker.getCoffeeShop()==null){
             throw new NoCoffeeShopAssignedException("The worker has no coffee shop assigned to him");
-        }
-        if(orderRepository.existsByTableNumber(order.getTableNumber())){
-            throw new OrderAlreadyInThatTableException();
         }
         order.setWorker(worker);
         order.setCoffeeShop(worker.getCoffeeShop());
         Order tmp = orderRepository.save(order);
         worker.getOrders().add(tmp);
-        workerService.registerWorker(worker);
+        workerService.saveWorker(worker);
         return tmp;
     }
     @Override
-    public void deleteOrder(Long workerId, Order order) {
-        Worker worker = workerService.getWorker(workerId);
-        if(worker.getCoffeeShop()==null){
-            throw new NoCoffeeShopAssignedException("The worker has no coffee shop assigned to him");
-        }
-        worker.getOrders().remove(order);
-        orderRepository.deleteById(order.getTableNumber());
+    public void deleteOrder(Order order) {
+        Authentication authentication =  SecurityContextHolder.getContext().getAuthentication();
+        Worker worker = (Worker) authentication.getPrincipal();
+        worker = workerService.getWorker(worker.getId());
+        worker.getCoffeeShop().getWorkers().stream().filter(s->s.getOrders().contains(order)).forEach(s->{s.getOrders().remove(order);
+            workerService.saveWorker(s);
+        });
+        orderRepository.deleteById(order.getId());
     }
 
     @Override

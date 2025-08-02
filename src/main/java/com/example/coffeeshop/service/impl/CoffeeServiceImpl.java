@@ -3,7 +3,9 @@ package com.example.coffeeshop.service.impl;
 import com.example.coffeeshop.model.domain.CoffeeShop;
 import com.example.coffeeshop.model.domain.Worker;
 import com.example.coffeeshop.repository.CoffeeShopRepository;
+import com.example.coffeeshop.repository.OrderRepository;
 import com.example.coffeeshop.service.CoffeeShopService;
+import com.example.coffeeshop.service.OrderService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,10 +19,12 @@ import java.util.Optional;
 public class CoffeeServiceImpl implements CoffeeShopService {
     private final CoffeeShopRepository coffeeShopRepository;
     private final PasswordEncoder passwordEncoder;
+    private final OrderRepository orderRepository;
 
-    public CoffeeServiceImpl(CoffeeShopRepository coffeeShopRepository, PasswordEncoder passwordEncoder) {
+    public CoffeeServiceImpl(CoffeeShopRepository coffeeShopRepository, PasswordEncoder passwordEncoder, OrderRepository orderRepository) {
         this.coffeeShopRepository = coffeeShopRepository;
         this.passwordEncoder = passwordEncoder;
+        this.orderRepository = orderRepository;
     }
 
 
@@ -48,6 +52,19 @@ public class CoffeeServiceImpl implements CoffeeShopService {
             return coffeeShopRepository.save(coffeeShop);
         }
         throw new NullPointerException("Only coffee shop can add workers");
+    }
+
+    @Override
+    public void removeWorker(Worker worker) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        //if(auth.getPrincipal() instanceof CoffeeShop){
+            CoffeeShop tmp = (CoffeeShop) auth.getPrincipal();
+            CoffeeShop coffeeShop = coffeeShopRepository.findById(tmp.getId()).get();
+            worker.setCoffeeShop(null);
+            worker.getOrders().forEach(s->orderRepository.deleteById(s.getId()));
+            coffeeShopRepository.save(coffeeShop);
+        //}else
+          //   throw new NullPointerException("Only coffee shop can remove workers");
     }
 
     @Override

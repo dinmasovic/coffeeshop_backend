@@ -10,6 +10,7 @@ import com.example.coffeeshop.repository.WorkerRepository;
 import com.example.coffeeshop.service.CoffeeShopService;
 import com.example.coffeeshop.service.WorkerService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -51,11 +52,23 @@ public class CoffeeShopController{
         }
     }
     @PostMapping("/addworker")
-    public ResponseEntity<String> addWorker(@RequestParam Long workerId){
+    public ResponseEntity<String> addWorker(@RequestParam String name){
         try{
-            Worker worker = workerRepository.findById(workerId).orElseThrow(NoSuchWorkerException::new);
+            Worker worker = workerRepository.findByName(name).orElseThrow(NoSuchWorkerException::new);
             coffeeShopService.registerWorker(worker);
             return ResponseEntity.ok("The worker is added to the coffee shop");
+        }catch (NullPointerException | NoSuchWorkerException e){
+            System.out.println(e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    @PutMapping("/removeworker")
+    @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<String> removeWorker(@RequestParam String name){
+        try {
+            Worker worker = workerRepository.findByName(name).orElseThrow(NoSuchWorkerException::new);
+            coffeeShopService.removeWorker(worker);
+            return ResponseEntity.ok("The worker is removed to the coffee shop");
         }catch (NullPointerException | NoSuchWorkerException e){
             System.out.println(e.getMessage());
             return ResponseEntity.badRequest().build();

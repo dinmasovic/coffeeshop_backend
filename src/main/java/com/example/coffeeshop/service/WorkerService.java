@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import java.util.List;
 
 public interface WorkerService extends UserDetailsService {
+    public Worker saveWorker(Worker worker);
     public Worker registerWorker(Worker worker);
     public Worker getWorker(Long workerId);
     public List<Worker> getAllWorkers();

@@ -12,6 +12,8 @@ import java.util.List;
 @Table(name = "orders")
 public class Order {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     private Long tableNumber;
     @ManyToMany(fetch = FetchType.EAGER)
     private List<Drink> drinks;
@@ -22,7 +24,7 @@ public class Order {
     private double billAmount;
     public Order(Long tableNumber,List<Drink> drinks) {
         this.tableNumber=tableNumber;
-        this.drinks = drinks;
+        this.drinks = new ArrayList<>(drinks);
         billAmount = drinks.stream().mapToDouble(Drink::getPrice).sum();
     }
     public Order() {
@@ -30,5 +32,12 @@ public class Order {
     }
     public void updateBillAmount() {
         billAmount = drinks.stream().mapToDouble(Drink::getPrice).sum();
+    }
+
+    @Override
+    public String toString() {
+        return "Order{" +
+                "tableNumber=" + tableNumber +
+                '}';
     }
 }

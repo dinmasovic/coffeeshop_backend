@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -19,6 +20,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
 
 @Configuration
+@EnableMethodSecurity
 public class WebSecurityConfig {
 
     private final CustomAuthenticationProvider authProvider;
@@ -39,14 +41,10 @@ public class WebSecurityConfig {
                         .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
                 )
                 .authorizeHttpRequests(requests -> requests
-                        .requestMatchers("/h2/**","/worker/add","/swagger-ui/**", "/v3/api-docs/**","/coffeeshop/register").permitAll()
+                        .requestMatchers("/h2/**","/worker/register","/swagger-ui/**", "/v3/api-docs/**","/coffeeshop/register","/login","/auth/**").permitAll()
                         .anyRequest().authenticated()
                 )
-                .formLogin((form) -> form
-                        .permitAll()
-                        .failureUrl("/login?error=BadCredentials")
-                        .defaultSuccessUrl("/drinks", true)
-                )
+                .formLogin(AbstractHttpConfigurer::disable)
                 .logout((logout) -> logout
                         .logoutUrl("/logout")
                         .clearAuthentication(true)

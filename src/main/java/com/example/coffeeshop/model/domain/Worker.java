@@ -22,6 +22,7 @@ public class Worker implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(unique = true)
     private String name;
     private String password;
     @Enumerated
@@ -79,5 +80,10 @@ public class Worker implements UserDetails {
         return isEnabled;
     }
 
-
+    @Override
+    public String toString() {
+        return "Worker{" +
+                "name='" + name + '\'' +
+                '}';
+    }
 }

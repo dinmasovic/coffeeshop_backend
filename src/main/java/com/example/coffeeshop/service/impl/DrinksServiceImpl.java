@@ -7,8 +7,10 @@ import com.example.coffeeshop.model.exceptions.NoCoffeeShopAssignedException;
 import com.example.coffeeshop.model.exceptions.NoDrinkFoundException;
 import com.example.coffeeshop.repository.CoffeeShopRepository;
 import com.example.coffeeshop.repository.DrinksRepository;
+import com.example.coffeeshop.repository.OrderRepository;
 import com.example.coffeeshop.repository.WorkerRepository;
 import com.example.coffeeshop.service.DrinksService;
+import com.example.coffeeshop.service.OrderService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -20,11 +22,13 @@ public class DrinksServiceImpl implements DrinksService {
     private final DrinksRepository drinksRepository;
     private final CoffeeShopRepository coffeeShopRepository;
     private final WorkerRepository workerRepository;
+    private final OrderRepository orderRepository;
 
-    public DrinksServiceImpl(DrinksRepository drinksRepository, CoffeeShopRepository coffeeShopRepository, WorkerRepository workerRepository) {
+    public DrinksServiceImpl(DrinksRepository drinksRepository, CoffeeShopRepository coffeeShopRepository, WorkerRepository workerRepository, OrderService orderService, OrderRepository orderRepository) {
         this.drinksRepository = drinksRepository;
         this.coffeeShopRepository = coffeeShopRepository;
         this.workerRepository = workerRepository;
+        this.orderRepository = orderRepository;
     }
 
     @Override
@@ -99,8 +103,15 @@ public class DrinksServiceImpl implements DrinksService {
         if(authentication.getPrincipal() instanceof CoffeeShop) {
             CoffeeShop shop = (CoffeeShop) authentication.getPrincipal();
             if(shop.getDrinks().stream().anyMatch(s->s.getId().equals(drinkID))){
-                drinksRepository.deleteById(drinkID);
+                shop.getWorkers()
+                        .stream().flatMap(s->s.getOrders().stream())
+                            .filter(s->s.getDrinks().stream().anyMatch(d->d.getId().equals(drinkID)))
+                            .forEach(s->{s.getDrinks().removeIf(t->t.getId().equals(drinkID));
+                                    s.updateBillAmount();
+                                    orderRepository.save(s);
+                            });
             }
+            drinksRepository.deleteById(drinkID);
         }else{
             Worker worker = (Worker) authentication.getPrincipal();
             worker=workerRepository.findById(worker.getId()).get();
@@ -108,8 +119,15 @@ public class DrinksServiceImpl implements DrinksService {
                 throw new NoCoffeeShopAssignedException("The worker is not assigned to any coffee shop");
             }
             if(worker.getCoffeeShop().getDrinks().stream().anyMatch(s->s.getId().equals(drinkID))){
-                drinksRepository.deleteById(drinkID);
+                worker.getCoffeeShop().getWorkers()
+                        .stream().flatMap(s->s.getOrders().stream())
+                        .filter(s->s.getDrinks().stream().anyMatch(d->d.getId().equals(drinkID)))
+                        .forEach(s->{s.getDrinks().removeIf(t->t.getId().equals(drinkID));
+                            s.updateBillAmount();
+                            orderRepository.save(s);
+                        });
             }
+            drinksRepository.deleteById(drinkID);
         }
     }
 

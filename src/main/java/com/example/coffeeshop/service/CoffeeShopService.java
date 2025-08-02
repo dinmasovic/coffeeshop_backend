@@ -12,4 +12,5 @@ public interface CoffeeShopService extends UserDetailsService {
      Optional<CoffeeShop> getCoffeeShop(Long coffeeShopId);
      CoffeeShop register(CoffeeShop coffeeShop);
      CoffeeShop registerWorker(Worker worker);
+     void removeWorker(Worker worker);
 }
